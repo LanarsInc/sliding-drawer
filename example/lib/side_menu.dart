@@ -9,7 +9,7 @@ class SideMenu extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _SideMenuState createState() => _SideMenuState();
+  State<SideMenu> createState() => _SideMenuState();
 }
 
 class _SideMenuState extends State<SideMenu> {
@@ -17,12 +17,12 @@ class _SideMenuState extends State<SideMenu> {
   Widget build(BuildContext context) {
     return Material(
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           border: Border(
             right: BorderSide(
               color: Color(0xFFCAD5DD),
-              width: .5,
+              width: 0.5,
             ),
           ),
         ),
@@ -34,65 +34,105 @@ class _SideMenuState extends State<SideMenu> {
                   padding: const EdgeInsets.symmetric(vertical: 20),
                   child: Column(
                     children: [
-                      header(),
-                      menuContent(),
-                      communityReferences(),
+                      _MenuHeader(onPress: widget.onAction),
+                      _MenuContent(onPress: widget.onAction),
+                      _MenuFooter(onPress: widget.onAction),
                       const SizedBox(height: 24),
                     ],
                   ),
                 ),
               ),
-              applicationVersion(),
+              const _AppVersion(),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget header() {
+class _MenuHeader extends StatelessWidget {
+  const _MenuHeader({
+    super.key,
+    this.onPress,
+  });
+
+  final VoidCallback? onPress;
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: GestureDetector(
-        onTap: () {
-          widget.onAction();
-          //dispatcher(ChangeTabIndexAction(TAB_INDEX_MY_PROFILE));
-        },
+        onTap: onPress,
         child: Align(
           alignment: Alignment.topLeft,
-          child: Column(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Icon(
+              ClipRRect(
+                borderRadius: BorderRadius.circular(32),
+                child: Container(
+                  width: 64,
+                  height: 64,
+                  color: const Color(0xFFBDBDBD),
+                  child: const Icon(
                     Icons.person,
+                    size: 48,
+                    color: Color(0xFF8D6E63),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Full name',
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'John Smith',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'john.smith@example.com',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 4),
-              Text('Email'),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget menuContent() {
+
+class _MenuContent extends StatelessWidget {
+  const _MenuContent({
+    super.key,
+    required this.onPress,
+  });
+
+  final VoidCallback onPress;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border(
           bottom: BorderSide(
             color: Color(0xFFCAD5DD),
-            width: .5,
+            width: 0.5,
           ),
         ),
       ),
@@ -101,92 +141,100 @@ class _SideMenuState extends State<SideMenu> {
         child: Column(
           children: [
             const SizedBox(height: 24),
-            menuItem(
-              'Clock',
-              Icons.access_alarms,
-              () {
-                widget.onAction();
-              },
+            _MenuItem(
+              text: 'Library',
+              icon: Icons.local_library,
+              onPress: onPress,
             ),
-            menuItem(
-              'Library',
-              Icons.local_library,
-              () {
-                widget.onAction();
-              },
+            _MenuItem(
+              text: 'Community',
+              icon: Icons.people,
+              onPress: onPress,
             ),
-            menuItem(
-              'Community',
-              Icons.people,
-              () {
-                widget.onAction();
-              },
+            _MenuItem(
+              text: 'Statistics',
+              icon: Icons.bar_chart,
+              onPress: onPress,
             ),
-            menuItem(
-              'Home',
-              Icons.home,
-              () async {
-                widget.onAction();
-                await openEmailChooser();
-              },
+            _MenuItem(
+              text: 'Calendar',
+              icon: Icons.calendar_month,
+              onPress: onPress,
             ),
-            menuItem(
-              'Diagrams',
-              Icons.bar_chart,
-              () async {
-                widget.onAction();
-              },
+            const SizedBox(height: 12),
+            _MenuItem(
+              text: 'Log out',
+              icon: Icons.logout,
+              iconColor: Color(0xFF9E9E9E),
+              onPress: onPress,
             ),
-            menuItem(
-              'Log out',
-              Icons.logout,
-              () async {
-
-              },
-            ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget communityReferences() {
+class _MenuFooter extends StatelessWidget {
+  const _MenuFooter({
+    super.key,
+    required this.onPress,
+  });
+
+  final VoidCallback onPress;
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
-          menuItem(
-            'A1',
-            null,
-            () {
-              widget.onAction();
-            },
+          const SizedBox(height: 12),
+          _MenuItem(
+            text: 'FAQ',
+            onPress: onPress,
           ),
-          menuItem(
-            'A2',
-            null,
-            () {
-              widget.onAction();
-
-            },
+          _MenuItem(
+            text: 'Privacy policy',
+            onPress: onPress,
+          ),
+          _MenuItem(
+            text: 'Terms of service',
+            onPress: onPress,
           ),
         ],
       ),
     );
   }
+}
 
-  Widget menuItem(String text, IconData? icon, Function onPress) {
+class _MenuItem extends StatelessWidget {
+  const _MenuItem({
+    super.key,
+    required this.text,
+    this.icon,
+    this.iconColor,
+    required this.onPress,
+  });
+
+  final String text;
+  final IconData? icon;
+  final Color? iconColor;
+  final VoidCallback onPress;
+
+  @override
+  Widget build(BuildContext context) {
     return InkWell(
-      onTap: onPress as void Function()?,
-      child: Container(
+      onTap: onPress,
+      child: SizedBox(
         height: 44,
         child: Row(
           children: <Widget>[
             if (icon != null) ...[
               Icon(
                 icon,
-                color: Colors.orange,
+                color: iconColor ?? Colors.orange,
               ),
               const SizedBox(width: 12),
             ],
@@ -201,64 +249,23 @@ class _SideMenuState extends State<SideMenu> {
       ),
     );
   }
+}
 
-  Future openEmailChooser() async {
+class _AppVersion extends StatelessWidget {
+  const _AppVersion({
+    super.key,
+  });
 
-  }
-
-  //TODO extract
-  void showConfirmationDialog(String content, Function onYesPress,
-      [String? yesText, String? noText]) {
-    /*final dialog = GenericDialog(
-      content: content,
-      onPositiveButtonPress: onYesPress,
-    );
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) => dialog,
-    );*/
-  }
-
-  //TODO extract to BLoC
-  void logoutFromServer() async {
-/*    try {
-      showLoadingDialog();
-      final client = await getNetworkClient();
-
-      try {
-        final response = await client.getDio().get('api/logout/');
-
-        dispatcher(PopRouteAction());
-
-        if (response.statusCode == HttpStatus.ok ||
-            response.statusCode == HttpStatus.unauthorized) {
-          dispatcher(LogoutAction());
-        } else {
-          var localizations = AppLocalizations.of(context);
-          SnackBar snackBar = SnackBar(content: Text(localizations!.errorDuringAddBook));
-          ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        }
-      } on DioError catch (derr) {
-        print(derr);
-        if (derr.response?.statusCode == HttpStatus.unauthorized) {
-          dispatcher(LogoutAction());
-        }
-      }
-    } catch (error) {
-      print(error);
-    }*/
-  }
-
-  Widget applicationVersion() {
+  @override
+  Widget build(BuildContext context) {
     return Positioned(
       left: 0,
       right: 0,
       bottom: 0,
       child: Container(
         color: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
+        child: const Padding(
+          padding: EdgeInsets.all(20),
           child: Text(
             'Version of application 1.0.0',
             textAlign: TextAlign.start,

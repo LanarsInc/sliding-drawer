@@ -31,6 +31,16 @@ dependencies:
   flutter:
     sdk: flutter
 
+  auto_route: 7.6.0
+
+  side_panel_flutter:
+    # When depending on this package from a real application you should use:
+    #   top_snackbar_flutter: ^x.y.z
+    # See https://dart.dev/tools/pub/dependencies#version-constraints
+    # The example app is bundled with the plugin so we use a path dependency on
+    # the parent directory to use the current plugin's version.
+    path: ../
+
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -39,6 +49,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+  build_runner:
+  build_runner_core: 7.2.9
+  auto_route_generator: 7.1.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

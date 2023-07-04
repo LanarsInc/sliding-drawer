@@ -1,15 +1,16 @@
 name: side_panel_flutter
 description: A starting point for Dart libraries or applications.
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
 
 environment:
-  sdk: ^3.0.3
+  sdk: '>=2.15.0 <4.0.0'
 
-# Add regular dependencies here.
 dependencies:
-  # path: ^1.8.0
+  flutter:
+    sdk: flutter
 
 dev_dependencies:
-  lints: ^2.0.0
-  test: ^1.21.0
+  flutter_test:
+    sdk: flutter
+
+flutter:

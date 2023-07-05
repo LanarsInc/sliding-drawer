@@ -1,29 +1,24 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 class SidePanelContainer extends StatefulWidget {
-  final bool ignorePointer;
-
-  ///TODO consider use builders instead of Widgets (to provide state reference outside)
-  final Widget sidePanel;
-  final Widget mainContent;
-  final Function(AnimationStatus)? onStatusChanged;
-
   const SidePanelContainer({
     Key? key,
-    required this.sidePanel,
-    required this.mainContent,
-    this.onStatusChanged,
+    required this.sidePanelBuilder,
+    required this.mainContentBuilder,
+    this.onAnimationStatusChanged,
     this.ignorePointer = false,
   }) : super(key: key);
+
+  final WidgetBuilder sidePanelBuilder;
+  final WidgetBuilder mainContentBuilder;
+  final bool ignorePointer;
+  final AnimationStatusListener? onAnimationStatusChanged;
 
   @override
   SidePanelContainerState createState() => SidePanelContainerState();
 }
 
-class SidePanelContainerState extends State<SidePanelContainer>
-    with TickerProviderStateMixin {
+class SidePanelContainerState extends State<SidePanelContainer> with TickerProviderStateMixin {
   static final kMinimumDistanceToDetectDragging = 20.0;
   static final kAnimationDuration = const Duration(milliseconds: 250);
   final mainContentKey = GlobalKey();
@@ -39,13 +34,13 @@ class SidePanelContainerState extends State<SidePanelContainer>
   bool isOpen = false;
   bool isOpening = false;
 
-  double _currentProgressPercent = .0;
+  double _currentProgressPercent = 0.0;
 
-  double _onHorizontalDragDownPositionDx = .0;
+  double _onHorizontalDragDownPositionDx = 0.0;
   Offset _onHorizontalDragDownOffset = Offset.zero;
 
-  double _sidePanelWidthToScreenWidthRation = .76;
-  double _sidePanelAutocompletePercentLimit = .05;
+  double _sidePanelWidthToScreenWidthRatio = 0.76;
+  double _sidePanelAutocompletePercentLimit = 0.05;
 
   /// Toggle drawer
   void toggleSidePanel() => _mainContentAnimationController.isCompleted
@@ -61,13 +56,12 @@ class SidePanelContainerState extends State<SidePanelContainer>
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-      return Container(
-        child: GestureDetector(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        return Container(
+          child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () {
-              if (mainContentKey.globalPaintBounds!
-                  .contains(_onHorizontalDragDownOffset)) {
+              if (mainContentKey.globalPaintBounds!.contains(_onHorizontalDragDownOffset)) {
                 closeSidePanel();
               }
             },
@@ -83,76 +77,39 @@ class SidePanelContainerState extends State<SidePanelContainer>
               _openOrClosePanel();
             },
             onHorizontalDragUpdate: (details) {
-              final expandedWidth =
-                  constraints.maxWidth * _sidePanelWidthToScreenWidthRation;
+              final expandedWidth = constraints.maxWidth * _sidePanelWidthToScreenWidthRatio;
               if (isOpening) {
-                final globalPosition =
-                    details.globalPosition.dx - _onHorizontalDragDownPositionDx;
+                final globalPosition = details.globalPosition.dx - _onHorizontalDragDownPositionDx;
                 double progress = globalPosition / expandedWidth;
                 _animate(normalizeProgressValue(progress));
               } else {
-                final globalPosition =
-                    _onHorizontalDragDownPositionDx - details.globalPosition.dx;
+                final globalPosition = _onHorizontalDragDownPositionDx - details.globalPosition.dx;
                 double progress = 1 - globalPosition / expandedWidth;
                 _animate(normalizeProgressValue(progress));
               }
             },
             child: Stack(
               children: [
-                mainContent(),
-                sidePanel(constraints),
+                _MainContent(
+                  shouldAbsorbPointer: isOpen,
+                  animationController: _mainContentAnimationController,
+                  animation: mainContentAnimation,
+                  mainContentKey: mainContentKey,
+                  opacityAnimation: mainContentOpacityAnimation,
+                  contentBuilder: widget.mainContentBuilder,
+                ),
+                _SlidePanel(
+                  sidePanelBuilder: widget.sidePanelBuilder,
+                  shouldIgnorePointer: isClosed,
+                  animationController: _mainContentAnimationController,
+                  animation: sidePanelAnimation,
+                  sidePanelWidthToScreenWidthRatio: _sidePanelWidthToScreenWidthRatio,
+                ),
               ],
-            )),
-      );
-    });
-  }
-
-  Widget mainContent() {
-    return AbsorbPointer(
-      absorbing: isOpen,
-      child: AnimatedBuilder(
-        animation: _mainContentAnimationController,
-        builder: (_, child) {
-          return Transform.translate(
-            offset: Offset(mainContentAnimation!.value, 0),
-            child: child,
-          );
-        },
-        child: Container(
-          key: mainContentKey,
-          width: double.infinity,
-          height: double.infinity,
-          child: AnimatedBuilder(
-            animation: _mainContentAnimationController,
-            builder: (_, child) {
-              return Opacity(
-                opacity: mainContentOpacityAnimation!.value,
-                child: widget.mainContent,
-              );
-            },
+            ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget sidePanel(BoxConstraints constraints) {
-    return IgnorePointer(
-      ignoring: isClosed,
-      child: AnimatedBuilder(
-        animation: _mainContentAnimationController,
-        builder: (_, child) {
-          return Transform.translate(
-            offset: Offset(sidePanelAnimation!.value, 0),
-            child: child,
-          );
-        },
-        child: Container(
-          width: constraints.maxWidth * _sidePanelWidthToScreenWidthRation,
-          height: constraints.maxHeight,
-          child: widget.sidePanel,
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -189,7 +146,7 @@ class SidePanelContainerState extends State<SidePanelContainer>
         if (mounted) {
           isOpen = status == AnimationStatus.completed;
           isClosed = status == AnimationStatus.dismissed;
-          widget.onStatusChanged?.call(status);
+          widget.onAnimationStatusChanged?.call(status);
           setState(() {});
         }
       });
@@ -198,11 +155,9 @@ class SidePanelContainerState extends State<SidePanelContainer>
 
   @override
   void didChangeDependencies() {
-    final expandedWidth =
-        MediaQuery.of(context).size.width * _sidePanelWidthToScreenWidthRation;
+    final expandedWidth = MediaQuery.of(context).size.width * _sidePanelWidthToScreenWidthRatio;
 
-    mainContentAnimation ??=
-        Tween<double>(begin: 0, end: expandedWidth).animate(
+    mainContentAnimation ??= Tween<double>(begin: 0, end: expandedWidth).animate(
       CurvedAnimation(
         parent: _mainContentAnimationController,
         curve: Curves.easeIn,
@@ -218,7 +173,7 @@ class SidePanelContainerState extends State<SidePanelContainer>
       ),
     );
 
-    mainContentOpacityAnimation ??= Tween<double>(begin: 1, end: .5).animate(
+    mainContentOpacityAnimation ??= Tween<double>(begin: 1, end: 0.5).animate(
       CurvedAnimation(
         parent: _mainContentAnimationController,
         curve: Curves.easeIn,
@@ -279,5 +234,96 @@ extension GlobalKeyExtension on GlobalKey {
     } else {
       return null;
     }
+  }
+}
+
+class _MainContent extends StatelessWidget {
+  const _MainContent({
+    Key? key,
+    required this.shouldAbsorbPointer,
+    required this.animationController,
+    required this.animation,
+    required this.mainContentKey,
+    required this.opacityAnimation,
+    required this.contentBuilder,
+  }) : super(key: key);
+
+  final WidgetBuilder contentBuilder;
+  final bool shouldAbsorbPointer;
+  final GlobalKey<State<StatefulWidget>> mainContentKey;
+  final AnimationController animationController;
+  final Animation? animation;
+  final Animation? opacityAnimation;
+
+  @override
+  Widget build(BuildContext context) {
+    return AbsorbPointer(
+      absorbing: shouldAbsorbPointer,
+      child: AnimatedBuilder(
+        animation: animationController,
+        builder: (_, child) {
+          return Transform.translate(
+            offset: Offset(animation!.value, 0),
+            child: child,
+          );
+        },
+        child: Container(
+          key: mainContentKey,
+          width: double.infinity,
+          height: double.infinity,
+          child: AnimatedBuilder(
+            animation: animationController,
+            builder: (_, child) {
+              return Opacity(
+                opacity: opacityAnimation!.value,
+                child: contentBuilder(context),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SlidePanel extends StatelessWidget {
+  const _SlidePanel({
+    Key? key,
+    required this.sidePanelBuilder,
+    required this.shouldIgnorePointer,
+    required this.animationController,
+    required this.animation,
+    required this.sidePanelWidthToScreenWidthRatio,
+  }) : super(key: key);
+
+  final WidgetBuilder sidePanelBuilder;
+  final bool shouldIgnorePointer;
+  final AnimationController animationController;
+  final Animation? animation;
+  final double sidePanelWidthToScreenWidthRatio;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return IgnorePointer(
+          ignoring: shouldIgnorePointer,
+          child: AnimatedBuilder(
+            animation: animationController,
+            builder: (_, child) {
+              return Transform.translate(
+                offset: Offset(animation!.value, 0),
+                child: child,
+              );
+            },
+            child: Container(
+              width: constraints.maxWidth * sidePanelWidthToScreenWidthRatio,
+              height: constraints.maxHeight,
+              child: sidePanelBuilder(context),
+            ),
+          ),
+        );
+      },
+    );
   }
 }

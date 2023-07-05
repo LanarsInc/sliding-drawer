@@ -18,28 +18,32 @@ class MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return SidePanelContainer(
       key: sidePanelKey,
-      sidePanel: SideMenu(
-        onAction: () => sidePanelKey.currentState!.closeSidePanel(),
-      ),
-      mainContent: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          leading: IconButton(
-            onPressed: () {
-              sidePanelKey.currentState!.openSidePanel();
-            },
-            icon: Icon(
-              Icons.menu_rounded,
+      sidePanelBuilder: (context) {
+        return SideMenu(
+          onAction: () => sidePanelKey.currentState!.closeSidePanel(),
+        );
+      },
+      mainContentBuilder: (context) {
+        return Scaffold(
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            leading: IconButton(
+              onPressed: () {
+                sidePanelKey.currentState!.openSidePanel();
+              },
+              icon: const Icon(
+                Icons.menu_rounded,
+              ),
+            ),
+            title: const Text('Home page'),
+          ),
+          body: Center(
+            child: Image.asset(
+              'assets/flutter_dash.png',
             ),
           ),
-          title: Text('Home page'),
-        ),
-        body: Center(
-          child: Image.asset(
-            'assets/flutter_dash.png',
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

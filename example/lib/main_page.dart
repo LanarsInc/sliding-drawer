@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:side_panel_flutter/side_panel_container.dart';
+import 'package:side_panel_flutter/side_panel_container_settings.dart';
 import 'side_menu.dart';
 
 class MainPage extends StatefulWidget {
@@ -16,8 +17,13 @@ class MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
+    final sidePanelWidth = MediaQuery.sizeOf(context).width * 0.76;
+
     return SidePanelContainer(
       key: sidePanelKey,
+      settings: SidePanelContainerSettings(
+        sidePanelWidth: sidePanelWidth,
+      ),
       sidePanelBuilder: (context) {
         return SideMenu(
           onAction: () => sidePanelKey.currentState!.closeSidePanel(),

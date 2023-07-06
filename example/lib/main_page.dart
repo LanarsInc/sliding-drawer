@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sliding_drawer/sliding_drawer.dart';
-import 'package:sliding_drawer/sliding_drawer_settings.dart';
 import 'side_menu.dart';
 
 class MainPage extends StatefulWidget {

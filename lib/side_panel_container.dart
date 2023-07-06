@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:side_panel_flutter/side_panel_container_settings.dart';
+import 'package:side_panel_flutter/utils/global_key_extension.dart';
 
 class SidePanelContainer extends StatefulWidget {
   const SidePanelContainer({
@@ -27,9 +28,9 @@ class SidePanelContainerState extends State<SidePanelContainer> with TickerProvi
 
   late AnimationController _mainContentAnimationController;
 
-  Animation? mainContentAnimation;
-  Animation? mainContentOpacityAnimation;
-  Animation? sidePanelAnimation;
+  Animation<double>? mainContentAnimation;
+  Animation<double>? mainContentOpacityAnimation;
+  Animation<double>? sidePanelAnimation;
 
   bool isClosed = true;
   bool isClosing = false;
@@ -53,103 +54,50 @@ class SidePanelContainerState extends State<SidePanelContainer> with TickerProvi
   void closeSidePanel() => _mainContentAnimationController.reverse();
 
   @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        return Container(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              if (mainContentKey.globalPaintBounds!.contains(_onHorizontalDragDownOffset)) {
-                closeSidePanel();
-              }
-            },
-            onHorizontalDragDown: (details) {
-              _onHorizontalDragDownOffset = details.globalPosition;
-              _onHorizontalDragDownPositionDx = details.globalPosition.dx;
-            },
-            onHorizontalDragStart: (details) {
-              _detectDirection();
-              _normalizeOnPanDownPosition();
-            },
-            onHorizontalDragEnd: (details) {
-              _openOrClosePanel();
-            },
-            onHorizontalDragUpdate: (details) {
-              final panelWidth = widget.settings.sidePanelWidth;
-              if (isOpening) {
-                final globalPosition = details.globalPosition.dx - _onHorizontalDragDownPositionDx;
-                double progress = globalPosition / panelWidth;
-                _animate(normalizeProgressValue(progress));
-              } else {
-                final globalPosition = _onHorizontalDragDownPositionDx - details.globalPosition.dx;
-                double progress = 1 - globalPosition / panelWidth;
-                _animate(normalizeProgressValue(progress));
-              }
-            },
-            child: Stack(
-              children: [
-                _MainContent(
-                  shouldAbsorbPointer: isOpen,
-                  animationController: _mainContentAnimationController,
-                  animation: mainContentAnimation,
-                  mainContentKey: mainContentKey,
-                  opacityAnimation: mainContentOpacityAnimation,
-                  contentBuilder: widget.mainContentBuilder,
-                ),
-                _SlidePanel(
-                  sidePanelBuilder: widget.sidePanelBuilder,
-                  shouldIgnorePointer: isClosed,
-                  animationController: _mainContentAnimationController,
-                  animation: sidePanelAnimation,
-                  sidePanelWidth: widget.settings.sidePanelWidth,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  double normalizeProgressValue(double position) {
-    if (position > 1.0) {
-      position = 1.0;
-    }
-    if (position < 0.0) {
-      position = 0.0;
-    }
-    return position;
-  }
-
-  void _detectDirection() {
-    isOpening = mainContentKey.globalPaintBounds!.left == 0;
-    isClosing = !isOpening;
-  }
-
-  void _normalizeOnPanDownPosition() {
-    if (isOpening) {
-      _onHorizontalDragDownPositionDx += kMinimumDistanceToDetectDragging;
-    } else {
-      _onHorizontalDragDownPositionDx -= kMinimumDistanceToDetectDragging;
-    }
-  }
-
-  @override
   void initState() {
     super.initState();
     _mainContentAnimationController = AnimationController(
       vsync: this,
       duration: widget.settings.animationDuration,
     )..addStatusListener((AnimationStatus status) {
-        if (mounted) {
-          isOpen = status == AnimationStatus.completed;
-          isClosed = status == AnimationStatus.dismissed;
-          widget.onAnimationStatusChanged?.call(status);
-          setState(() {});
-        }
-      });
+      if (mounted) {
+        isOpen = status == AnimationStatus.completed;
+        isClosed = status == AnimationStatus.dismissed;
+        widget.onAnimationStatusChanged?.call(status);
+        setState(() {});
+      }
+    });
     _mainContentAnimationController.reset();
+  }
+
+  @override
+  void didChangeDependencies() {
+    final sidePanelWidth = widget.settings.sidePanelWidth;
+
+    mainContentAnimation ??= Tween<double>(begin: 0, end: sidePanelWidth).animate(
+      CurvedAnimation(
+        parent: _mainContentAnimationController,
+        curve: Curves.easeIn,
+        reverseCurve: Curves.easeOut,
+      ),
+    );
+
+    sidePanelAnimation ??= Tween<double>(begin: -sidePanelWidth, end: 0).animate(
+      CurvedAnimation(
+        parent: _mainContentAnimationController,
+        curve: Curves.easeIn,
+        reverseCurve: Curves.easeOut,
+      ),
+    );
+
+    mainContentOpacityAnimation ??= Tween<double>(begin: 1, end: 0.5).animate(
+      CurvedAnimation(
+        parent: _mainContentAnimationController,
+        curve: Curves.easeIn,
+        reverseCurve: Curves.easeOut,
+      ),
+    );
+    super.didChangeDependencies();
   }
 
   @override
@@ -181,33 +129,63 @@ class SidePanelContainerState extends State<SidePanelContainer> with TickerProvi
   }
 
   @override
-  void didChangeDependencies() {
-    final panelWidth = widget.settings.sidePanelWidth;
-
-    mainContentAnimation ??= Tween<double>(begin: 0, end: panelWidth).animate(
-      CurvedAnimation(
-        parent: _mainContentAnimationController,
-        curve: Curves.easeIn,
-        reverseCurve: Curves.easeOut,
-      ),
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        return Container(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              if (mainContentKey.globalPaintBounds!.contains(_onHorizontalDragDownOffset)) {
+                closeSidePanel();
+              }
+            },
+            onHorizontalDragDown: (details) {
+              _onHorizontalDragDownOffset = details.globalPosition;
+              _onHorizontalDragDownPositionDx = details.globalPosition.dx;
+            },
+            onHorizontalDragStart: (details) {
+              _detectDirection();
+              _normalizeOnPanDownPosition();
+            },
+            onHorizontalDragEnd: (details) {
+              _openOrClosePanel();
+            },
+            onHorizontalDragUpdate: (details) {
+              final panelWidth = widget.settings.sidePanelWidth;
+              if (isOpening) {
+                final globalPosition = details.globalPosition.dx - _onHorizontalDragDownPositionDx;
+                double progress = globalPosition / panelWidth;
+                _animate(_normalizeProgressValue(progress));
+              } else {
+                final globalPosition = _onHorizontalDragDownPositionDx - details.globalPosition.dx;
+                double progress = 1 - globalPosition / panelWidth;
+                _animate(_normalizeProgressValue(progress));
+              }
+            },
+            child: Stack(
+              children: [
+                _MainContent(
+                  shouldAbsorbPointer: isOpen,
+                  animationController: _mainContentAnimationController,
+                  animation: mainContentAnimation,
+                  mainContentKey: mainContentKey,
+                  opacityAnimation: mainContentOpacityAnimation,
+                  contentBuilder: widget.mainContentBuilder,
+                ),
+                _SlidePanel(
+                  sidePanelBuilder: widget.sidePanelBuilder,
+                  shouldIgnorePointer: isClosed,
+                  animationController: _mainContentAnimationController,
+                  animation: sidePanelAnimation,
+                  sidePanelWidth: widget.settings.sidePanelWidth,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
-
-    sidePanelAnimation ??= Tween<double>(begin: -panelWidth, end: 0).animate(
-      CurvedAnimation(
-        parent: _mainContentAnimationController,
-        curve: Curves.easeIn,
-        reverseCurve: Curves.easeOut,
-      ),
-    );
-
-    mainContentOpacityAnimation ??= Tween<double>(begin: 1, end: 0.5).animate(
-      CurvedAnimation(
-        parent: _mainContentAnimationController,
-        curve: Curves.easeIn,
-        reverseCurve: Curves.easeOut,
-      ),
-    );
-    super.didChangeDependencies();
   }
 
   @override
@@ -242,26 +220,34 @@ class SidePanelContainerState extends State<SidePanelContainer> with TickerProvi
     }
   }
 
+  void _detectDirection() {
+    isOpening = mainContentKey.globalPaintBounds!.left == 0;
+    isClosing = !isOpening;
+  }
+
+  void _normalizeOnPanDownPosition() {
+    if (isOpening) {
+      _onHorizontalDragDownPositionDx += kMinimumDistanceToDetectDragging;
+    } else {
+      _onHorizontalDragDownPositionDx -= kMinimumDistanceToDetectDragging;
+    }
+  }
+
+  double _normalizeProgressValue(double position) {
+    if (position > 1.0) {
+      position = 1.0;
+    }
+    if (position < 0.0) {
+      position = 0.0;
+    }
+    return position;
+  }
+
   void _animate(double percent) {
     if (widget.ignorePointer) return;
 
     _currentProgressPercent = percent;
     _mainContentAnimationController.value = percent;
-  }
-}
-
-extension GlobalKeyExtension on GlobalKey {
-  Rect? get globalPaintBounds {
-    final renderObject = currentContext?.findRenderObject();
-    var translation = renderObject?.getTransformTo(null).getTranslation();
-
-    if (translation != null) {
-      return renderObject!.paintBounds.shift(
-        Offset(translation.x, translation.y),
-      );
-    } else {
-      return null;
-    }
   }
 }
 

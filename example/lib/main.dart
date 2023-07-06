@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:slide_panel_flutter_example/main_page.dart';
+import 'package:sliding_drawer_example/main_page.dart';
 
 void main() {
   runApp(const MyApp());

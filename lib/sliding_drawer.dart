@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:side_panel_flutter/side_panel_container_settings.dart';
-import 'package:side_panel_flutter/utils/global_key_extension.dart';
+import 'package:sliding_drawer/sliding_drawer_settings.dart';
+import 'package:sliding_drawer/utils/global_key_extension.dart';
 
-class SidePanelContainer extends StatefulWidget {
-  const SidePanelContainer({
+class SlidingDrawer extends StatefulWidget {
+  const SlidingDrawer({
     Key? key,
-    required this.sidePanelBuilder,
+    required this.drawerBuilder,
     required this.mainContentBuilder,
     this.onAnimationStatusChanged,
     this.ignorePointer = false,
-    this.settings = const SidePanelContainerSettings(),
+    this.settings = const SlidingDrawerSettings(),
   }) : super(key: key);
 
-  final WidgetBuilder sidePanelBuilder;
+  final WidgetBuilder drawerBuilder;
   final WidgetBuilder mainContentBuilder;
   final bool ignorePointer;
   final AnimationStatusListener? onAnimationStatusChanged;
-  final SidePanelContainerSettings settings;
+  final SlidingDrawerSettings settings;
 
   @override
-  SidePanelContainerState createState() => SidePanelContainerState();
+  SlidingDrawerState createState() => SlidingDrawerState();
 }
 
-class SidePanelContainerState extends State<SidePanelContainer> with TickerProviderStateMixin {
+class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMixin {
   static final kMinimumDistanceToDetectDragging = 20.0;
   final mainContentKey = GlobalKey();
 
@@ -30,7 +30,7 @@ class SidePanelContainerState extends State<SidePanelContainer> with TickerProvi
 
   Animation<double>? mainContentAnimation;
   Animation<double>? mainContentOpacityAnimation;
-  Animation<double>? sidePanelAnimation;
+  Animation<double>? drawerAnimation;
 
   bool isClosed = true;
   bool isClosing = false;
@@ -43,15 +43,15 @@ class SidePanelContainerState extends State<SidePanelContainer> with TickerProvi
   Offset _onHorizontalDragDownOffset = Offset.zero;
 
   /// Toggle drawer
-  void toggleSidePanel() => _mainContentAnimationController.isCompleted
+  void toggleSlidingDrawer() => _mainContentAnimationController.isCompleted
       ? _mainContentAnimationController.reverse()
       : _mainContentAnimationController.forward();
 
   /// Open drawer
-  void openSidePanel() => _mainContentAnimationController.forward();
+  void openSlidingDrawer() => _mainContentAnimationController.forward();
 
   /// Close drawer
-  void closeSidePanel() => _mainContentAnimationController.reverse();
+  void closeSlidingDrawer() => _mainContentAnimationController.reverse();
 
   @override
   void initState() {
@@ -72,9 +72,9 @@ class SidePanelContainerState extends State<SidePanelContainer> with TickerProvi
 
   @override
   void didChangeDependencies() {
-    final sidePanelWidth = widget.settings.sidePanelWidth;
+    final drawerWidth = widget.settings.drawerWidth;
 
-    mainContentAnimation ??= Tween<double>(begin: 0, end: sidePanelWidth).animate(
+    mainContentAnimation ??= Tween<double>(begin: 0, end: drawerWidth).animate(
       CurvedAnimation(
         parent: _mainContentAnimationController,
         curve: Curves.easeIn,
@@ -82,7 +82,7 @@ class SidePanelContainerState extends State<SidePanelContainer> with TickerProvi
       ),
     );
 
-    sidePanelAnimation ??= Tween<double>(begin: -sidePanelWidth, end: 0).animate(
+    drawerAnimation ??= Tween<double>(begin: -drawerWidth, end: 0).animate(
       CurvedAnimation(
         parent: _mainContentAnimationController,
         curve: Curves.easeIn,
@@ -101,17 +101,17 @@ class SidePanelContainerState extends State<SidePanelContainer> with TickerProvi
   }
 
   @override
-  void didUpdateWidget(covariant SidePanelContainer oldWidget) {
+  void didUpdateWidget(covariant SlidingDrawer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.settings.sidePanelWidth != oldWidget.settings.sidePanelWidth) {
-      _onChangeSidePanelWidth();
+    if (widget.settings.drawerWidth != oldWidget.settings.drawerWidth) {
+      _onChangedDrawerWidth();
     }
   }
 
-  void _onChangeSidePanelWidth() {
-    final sidePanelWidth = widget.settings.sidePanelWidth;
+  void _onChangedDrawerWidth() {
+    final drawerWidth = widget.settings.drawerWidth;
 
-    mainContentAnimation = Tween<double>(begin: 0, end: sidePanelWidth).animate(
+    mainContentAnimation = Tween<double>(begin: 0, end: drawerWidth).animate(
       CurvedAnimation(
         parent: _mainContentAnimationController,
         curve: Curves.easeIn,
@@ -119,7 +119,7 @@ class SidePanelContainerState extends State<SidePanelContainer> with TickerProvi
       ),
     );
 
-    sidePanelAnimation = Tween<double>(begin: -sidePanelWidth, end: 0).animate(
+    drawerAnimation = Tween<double>(begin: -drawerWidth, end: 0).animate(
       CurvedAnimation(
         parent: _mainContentAnimationController,
         curve: Curves.easeIn,
@@ -137,7 +137,7 @@ class SidePanelContainerState extends State<SidePanelContainer> with TickerProvi
             behavior: HitTestBehavior.opaque,
             onTap: () {
               if (mainContentKey.globalPaintBounds!.contains(_onHorizontalDragDownOffset)) {
-                closeSidePanel();
+                closeSlidingDrawer();
               }
             },
             onHorizontalDragDown: (details) {
@@ -152,7 +152,7 @@ class SidePanelContainerState extends State<SidePanelContainer> with TickerProvi
               _openOrClosePanel();
             },
             onHorizontalDragUpdate: (details) {
-              final panelWidth = widget.settings.sidePanelWidth;
+              final panelWidth = widget.settings.drawerWidth;
               if (isOpening) {
                 final globalPosition = details.globalPosition.dx - _onHorizontalDragDownPositionDx;
                 double progress = globalPosition / panelWidth;
@@ -173,12 +173,12 @@ class SidePanelContainerState extends State<SidePanelContainer> with TickerProvi
                   opacityAnimation: mainContentOpacityAnimation,
                   contentBuilder: widget.mainContentBuilder,
                 ),
-                _SlidePanel(
-                  sidePanelBuilder: widget.sidePanelBuilder,
+                _Drawer(
+                  drawerBuilder: widget.drawerBuilder,
                   shouldIgnorePointer: isClosed,
                   animationController: _mainContentAnimationController,
-                  animation: sidePanelAnimation,
-                  sidePanelWidth: widget.settings.sidePanelWidth,
+                  animation: drawerAnimation,
+                  drawerWidth: widget.settings.drawerWidth,
                 ),
               ],
             ),
@@ -203,18 +203,18 @@ class SidePanelContainerState extends State<SidePanelContainer> with TickerProvi
     final autocompletePercentLimit = widget.settings.autocompletePercentLimit;
     if (isOpening) {
       if (_currentProgressPercent >= autocompletePercentLimit) {
-        openSidePanel();
+        openSlidingDrawer();
       } else {
-        closeSidePanel();
+        closeSlidingDrawer();
       }
       return;
     }
 
     if (isClosing) {
       if (_currentProgressPercent <= (1 - autocompletePercentLimit)) {
-        closeSidePanel();
+        closeSlidingDrawer();
       } else {
-        openSidePanel();
+        openSlidingDrawer();
       }
       return;
     }
@@ -300,21 +300,21 @@ class _MainContent extends StatelessWidget {
   }
 }
 
-class _SlidePanel extends StatelessWidget {
-  const _SlidePanel({
+class _Drawer extends StatelessWidget {
+  const _Drawer({
     Key? key,
-    required this.sidePanelBuilder,
+    required this.drawerBuilder,
     required this.shouldIgnorePointer,
     required this.animationController,
     required this.animation,
-    required this.sidePanelWidth,
+    required this.drawerWidth,
   }) : super(key: key);
 
-  final WidgetBuilder sidePanelBuilder;
+  final WidgetBuilder drawerBuilder;
   final bool shouldIgnorePointer;
   final AnimationController animationController;
   final Animation? animation;
-  final double sidePanelWidth;
+  final double drawerWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -331,9 +331,9 @@ class _SlidePanel extends StatelessWidget {
               );
             },
             child: Container(
-              width: sidePanelWidth,
+              width: drawerWidth,
               height: constraints.maxHeight,
-              child: sidePanelBuilder(context),
+              child: drawerBuilder(context),
             ),
           ),
         );

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:side_panel_flutter/side_panel_container.dart';
-import 'package:side_panel_flutter/side_panel_container_settings.dart';
+import 'package:sliding_drawer/sliding_drawer.dart';
+import 'package:sliding_drawer/sliding_drawer_settings.dart';
 import 'side_menu.dart';
 
 class MainPage extends StatefulWidget {
@@ -13,20 +13,20 @@ class MainPage extends StatefulWidget {
 }
 
 class MainPageState extends State<MainPage> {
-  final sidePanelKey = GlobalKey<SidePanelContainerState>();
+  final slidingDrawerKey = GlobalKey<SlidingDrawerState>();
 
   @override
   Widget build(BuildContext context) {
-    final sidePanelWidth = MediaQuery.sizeOf(context).width * 0.76;
+    final slidingDrawerWidth = MediaQuery.sizeOf(context).width * 0.76;
 
-    return SidePanelContainer(
-      key: sidePanelKey,
-      settings: SidePanelContainerSettings(
-        sidePanelWidth: sidePanelWidth,
+    return SlidingDrawer(
+      key: slidingDrawerKey,
+      settings: SlidingDrawerSettings(
+        drawerWidth: slidingDrawerWidth,
       ),
-      sidePanelBuilder: (context) {
+      drawerBuilder: (context) {
         return SideMenu(
-          onAction: () => sidePanelKey.currentState!.closeSidePanel(),
+          onAction: () => slidingDrawerKey.currentState!.closeSlidingDrawer(),
         );
       },
       mainContentBuilder: (context) {
@@ -35,7 +35,7 @@ class MainPageState extends State<MainPage> {
             automaticallyImplyLeading: false,
             leading: IconButton(
               onPressed: () {
-                sidePanelKey.currentState!.openSidePanel();
+                slidingDrawerKey.currentState!.openSlidingDrawer();
               },
               icon: const Icon(
                 Icons.menu_rounded,

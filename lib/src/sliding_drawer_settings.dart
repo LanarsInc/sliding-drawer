@@ -1,5 +1,6 @@
 import 'package:flutter/animation.dart';
 
+/// A data class that is used to pass parameters for SlidingDrawer.
 class SlidingDrawerSettings {
   const SlidingDrawerSettings({
     this.drawerWidth = 300,
@@ -9,9 +10,23 @@ class SlidingDrawerSettings {
     this.autocompletePercentLimit = 0.05,
   });
 
+  /// The drawerWidth argument is used to specify drawer width.
   final double drawerWidth;
+
+  /// The animationDuration argument is used to specify duration of
+  /// sliding drawer opening/closing animation.
   final Duration animationDuration;
+
+  /// The animationCurve argument is used to specify curve to use in the forward
+  /// direction of drawer animation.
   final Curve animationCurve;
-  final Curve animationReverseCurve;
+
+  /// The animationReverseCurve argument is used to specify curve to use in
+  /// the reverse direction of drawer animation.
+  final Curve? animationReverseCurve;
+
+  /// The autocompletePercentLimit argument is used to specify the percentage of the size
+  /// of the drawer that the user has moved to, after which the drawer will automatically
+  /// complete opening/closing.
   final double autocompletePercentLimit;
 }

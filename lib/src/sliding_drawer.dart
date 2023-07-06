@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sliding_drawer/src/sliding_drawer_settings.dart';
 import 'package:sliding_drawer/src/utils/global_key_extension.dart';
 
+/// The widget that displays animated sliding drawer.
 class SlidingDrawer extends StatefulWidget {
   const SlidingDrawer({
     Key? key,
@@ -12,10 +13,21 @@ class SlidingDrawer extends StatefulWidget {
     this.settings = const SlidingDrawerSettings(),
   }) : super(key: key);
 
+  /// A builder for the drawer.
   final WidgetBuilder drawerBuilder;
+
+  /// A builder for the page content.
   final WidgetBuilder mainContentBuilder;
+
+  /// The ignorePointer argument is used to control drawer opening/closing by
+  /// horizontal dragging. If is set to true, dragging gesture will be ignored.
   final bool ignorePointer;
+
+  /// The onAnimationStatusChanged argument is used to provide status listener
+  /// for transition animation.
   final AnimationStatusListener? onAnimationStatusChanged;
+
+  /// The settings argument stores the drawer options.
   final SlidingDrawerSettings settings;
 
   @override

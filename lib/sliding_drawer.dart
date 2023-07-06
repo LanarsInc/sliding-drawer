@@ -59,15 +59,17 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
     _mainContentAnimationController = AnimationController(
       vsync: this,
       duration: widget.settings.animationDuration,
-    )..addStatusListener((AnimationStatus status) {
-      if (mounted) {
-        isOpen = status == AnimationStatus.completed;
-        isClosed = status == AnimationStatus.dismissed;
-        widget.onAnimationStatusChanged?.call(status);
-        setState(() {});
-      }
-    });
+    )..addStatusListener(_onAnimationStatusChanged);
     _mainContentAnimationController.reset();
+  }
+
+  void _onAnimationStatusChanged(AnimationStatus status) {
+    if (mounted) {
+      isOpen = status == AnimationStatus.completed;
+      isClosed = status == AnimationStatus.dismissed;
+      widget.onAnimationStatusChanged?.call(status);
+      setState(() {});
+    }
   }
 
   @override
@@ -77,16 +79,16 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
     mainContentAnimation ??= Tween<double>(begin: 0, end: drawerWidth).animate(
       CurvedAnimation(
         parent: _mainContentAnimationController,
-        curve: Curves.easeIn,
-        reverseCurve: Curves.easeOut,
+        curve: widget.settings.animationCurve,
+        reverseCurve: widget.settings.animationReverseCurve,
       ),
     );
 
     drawerAnimation ??= Tween<double>(begin: -drawerWidth, end: 0).animate(
       CurvedAnimation(
         parent: _mainContentAnimationController,
-        curve: Curves.easeIn,
-        reverseCurve: Curves.easeOut,
+        curve: widget.settings.animationCurve,
+        reverseCurve: widget.settings.animationReverseCurve,
       ),
     );
 
@@ -103,12 +105,20 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
   @override
   void didUpdateWidget(covariant SlidingDrawer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.settings.drawerWidth != oldWidget.settings.drawerWidth) {
-      _onChangedDrawerWidth();
+    _mainContentAnimationController
+      ..removeStatusListener(_onAnimationStatusChanged)
+      ..addStatusListener(_onAnimationStatusChanged);
+
+    var settings = widget.settings;
+    var oldSettings = oldWidget.settings;
+    if (settings.drawerWidth != oldSettings.drawerWidth ||
+        settings.animationCurve != oldSettings.animationCurve ||
+        settings.animationReverseCurve != oldSettings.animationReverseCurve) {
+      _updateAnimation();
     }
   }
 
-  void _onChangedDrawerWidth() {
+  void _updateAnimation() {
     final drawerWidth = widget.settings.drawerWidth;
 
     mainContentAnimation = Tween<double>(begin: 0, end: drawerWidth).animate(

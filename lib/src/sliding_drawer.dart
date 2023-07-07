@@ -56,14 +56,24 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
 
   /// Toggle drawer
   void toggleSlidingDrawer() => _mainContentAnimationController.isCompleted
-      ? _mainContentAnimationController.reverse()
-      : _mainContentAnimationController.forward();
+      ? closeSlidingDrawer()
+      : openSlidingDrawer();
 
   /// Open drawer
-  void openSlidingDrawer() => _mainContentAnimationController.forward();
+  void openSlidingDrawer() {
+    _closeKeyboard();
+    _mainContentAnimationController.forward();
+  }
 
   /// Close drawer
-  void closeSlidingDrawer() => _mainContentAnimationController.reverse();
+  void closeSlidingDrawer() {
+    _closeKeyboard();
+    _mainContentAnimationController.reverse();
+  }
+
+  void _closeKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
 
   @override
   void initState() {

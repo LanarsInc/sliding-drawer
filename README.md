@@ -5,7 +5,7 @@
 If you want to add a beautiful sliding animation menu to your application in an easy way, you can use this package.
 All you need is to pass your main content and drawer widgets to the SlidingDrawer.
 
-<img src="https://raw.githubusercontent.com/LanarsInc/sliding-drawer/main/example/assets/sliding-drawer-example.gif" width="300">
+<img src="https://raw.githubusercontent.com/LanarsInc/sliding-drawer/main/example/assets/sliding_drawer_example.gif" width="300">
 
 # How to use
 

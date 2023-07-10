@@ -20,6 +20,7 @@ class MainPageState extends State<MainPage> {
 
     return SlidingDrawer(
       key: slidingDrawerKey,
+      direction: SlidingDirection.left,
       settings: SlidingDrawerSettings(
         drawerWidth: slidingDrawerWidth,
       ),

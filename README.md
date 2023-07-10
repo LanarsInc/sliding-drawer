@@ -13,7 +13,8 @@ To use the SlidingDrawer pass build functions `drawerBuilder` and `mainContentBu
 and main content widgets correspondingly.\
 You can set drawer width, animation duration and curve by using `settings` argument.\
 Set `ignorePointer` to true if you need to disable opening/closing drawer by dragging.\
-To respond to opening/closing drawer, API provide listener `onAnimationStatusChanged`.
+To respond to opening/closing drawer, API provide listener `onAnimationStatusChanged`.\
+Supports left and right drawer sliding direction.
 
 # Example
 

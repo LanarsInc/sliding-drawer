@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:sliding_drawer/src/sliding_direction.dart';
 import 'package:sliding_drawer/src/sliding_drawer_settings.dart';
 import 'package:sliding_drawer/src/utils/global_key_extension.dart';
+import 'package:sliding_drawer/src/sliding_direction_strategy.dart';
 
 /// The widget that displays animated sliding drawer.
 class SlidingDrawer extends StatefulWidget {
@@ -11,6 +13,7 @@ class SlidingDrawer extends StatefulWidget {
     this.onAnimationStatusChanged,
     this.ignorePointer = false,
     this.settings = const SlidingDrawerSettings(),
+    this.direction = SlidingDirection.right,
   }) : super(key: key);
 
   /// A builder for the drawer.
@@ -30,6 +33,9 @@ class SlidingDrawer extends StatefulWidget {
   /// The settings argument stores the drawer options.
   final SlidingDrawerSettings settings;
 
+  /// Specifies the drawer sliding direction. Defaults to [SlidingDirection.right]
+  final SlidingDirection direction;
+
   @override
   SlidingDrawerState createState() => SlidingDrawerState();
 }
@@ -39,6 +45,7 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
   final mainContentKey = GlobalKey();
 
   late AnimationController _mainContentAnimationController;
+  late SlidingDirectionStrategy _slidingStrategy;
 
   Animation<double>? mainContentAnimation;
   Animation<double>? mainContentOpacityAnimation;
@@ -51,13 +58,9 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
 
   double _currentProgressPercent = 0.0;
 
-  double _onHorizontalDragDownPositionDx = 0.0;
-  Offset _onHorizontalDragDownOffset = Offset.zero;
-
   /// Toggle drawer
-  void toggleSlidingDrawer() => _mainContentAnimationController.isCompleted
-      ? closeSlidingDrawer()
-      : openSlidingDrawer();
+  void toggleSlidingDrawer() =>
+      _mainContentAnimationController.isCompleted ? closeSlidingDrawer() : openSlidingDrawer();
 
   /// Open drawer
   void openSlidingDrawer() {
@@ -83,6 +86,7 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
       duration: widget.settings.animationDuration,
     )..addStatusListener(_onAnimationStatusChanged);
     _mainContentAnimationController.reset();
+    _slidingStrategy = SlidingDirectionStrategy.fromDirection(widget.direction);
   }
 
   void _onAnimationStatusChanged(AnimationStatus status) {
@@ -97,22 +101,33 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
   @override
   void didChangeDependencies() {
     final drawerWidth = widget.settings.drawerWidth;
+    final screenWidth = MediaQuery.sizeOf(context).width;
 
-    mainContentAnimation ??= Tween<double>(begin: 0, end: drawerWidth).animate(
-      CurvedAnimation(
-        parent: _mainContentAnimationController,
-        curve: widget.settings.animationCurve,
-        reverseCurve: widget.settings.animationReverseCurve,
-      ),
-    );
+    mainContentAnimation ??= _slidingStrategy
+        .getMainContentTween(
+          drawerWidth: drawerWidth,
+          screenWidth: screenWidth,
+        )
+        .animate(
+          CurvedAnimation(
+            parent: _mainContentAnimationController,
+            curve: widget.settings.animationCurve,
+            reverseCurve: widget.settings.animationReverseCurve,
+          ),
+        );
 
-    drawerAnimation ??= Tween<double>(begin: -drawerWidth, end: 0).animate(
-      CurvedAnimation(
-        parent: _mainContentAnimationController,
-        curve: widget.settings.animationCurve,
-        reverseCurve: widget.settings.animationReverseCurve,
-      ),
-    );
+    drawerAnimation ??= _slidingStrategy
+        .getDrawerTween(
+          drawerWidth: drawerWidth,
+          screenWidth: screenWidth,
+        )
+        .animate(
+          CurvedAnimation(
+            parent: _mainContentAnimationController,
+            curve: widget.settings.animationCurve,
+            reverseCurve: widget.settings.animationReverseCurve,
+          ),
+        );
 
     mainContentOpacityAnimation ??= Tween<double>(begin: 1, end: 0.5).animate(
       CurvedAnimation(
@@ -138,26 +153,40 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
         settings.animationReverseCurve != oldSettings.animationReverseCurve) {
       _updateAnimation();
     }
+    if (widget.direction != oldWidget.direction) {
+      _slidingStrategy = SlidingDirectionStrategy.fromDirection(widget.direction);
+    }
   }
 
   void _updateAnimation() {
     final drawerWidth = widget.settings.drawerWidth;
+    final screenWidth = MediaQuery.sizeOf(context).width;
 
-    mainContentAnimation = Tween<double>(begin: 0, end: drawerWidth).animate(
-      CurvedAnimation(
-        parent: _mainContentAnimationController,
-        curve: Curves.easeIn,
-        reverseCurve: Curves.easeOut,
-      ),
-    );
+    mainContentAnimation = _slidingStrategy
+        .getMainContentTween(
+          drawerWidth: drawerWidth,
+          screenWidth: screenWidth,
+        )
+        .animate(
+          CurvedAnimation(
+            parent: _mainContentAnimationController,
+            curve: Curves.easeIn,
+            reverseCurve: Curves.easeOut,
+          ),
+        );
 
-    drawerAnimation = Tween<double>(begin: -drawerWidth, end: 0).animate(
-      CurvedAnimation(
-        parent: _mainContentAnimationController,
-        curve: Curves.easeIn,
-        reverseCurve: Curves.easeOut,
-      ),
-    );
+    drawerAnimation = _slidingStrategy
+        .getDrawerTween(
+          drawerWidth: drawerWidth,
+          screenWidth: screenWidth,
+        )
+        .animate(
+          CurvedAnimation(
+            parent: _mainContentAnimationController,
+            curve: Curves.easeIn,
+            reverseCurve: Curves.easeOut,
+          ),
+        );
   }
 
   @override
@@ -168,13 +197,14 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () {
-              if (mainContentKey.globalPaintBounds!.contains(_onHorizontalDragDownOffset)) {
+              if (mainContentKey.globalPaintBounds!
+                  .contains(_slidingStrategy.onHorizontalDragDownOffset)) {
                 closeSlidingDrawer();
               }
             },
             onHorizontalDragDown: (details) {
-              _onHorizontalDragDownOffset = details.globalPosition;
-              _onHorizontalDragDownPositionDx = details.globalPosition.dx;
+              _slidingStrategy.onHorizontalDragDownOffset = details.globalPosition;
+              _slidingStrategy.onHorizontalDragDownPositionDx = details.globalPosition.dx;
             },
             onHorizontalDragStart: (details) {
               _detectDirection();
@@ -185,15 +215,19 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
             },
             onHorizontalDragUpdate: (details) {
               final panelWidth = widget.settings.drawerWidth;
+              double progress;
+
               if (isOpening) {
-                final globalPosition = details.globalPosition.dx - _onHorizontalDragDownPositionDx;
-                double progress = globalPosition / panelWidth;
-                _animate(_normalizeProgressValue(progress));
+                final globalPosition =
+                    _slidingStrategy.calculateGlobalPositionOnOpen(details.globalPosition);
+                progress = globalPosition / panelWidth;
               } else {
-                final globalPosition = _onHorizontalDragDownPositionDx - details.globalPosition.dx;
-                double progress = 1 - globalPosition / panelWidth;
-                _animate(_normalizeProgressValue(progress));
+                final globalPosition =
+                    _slidingStrategy.calculateGlobalPositionOnClose(details.globalPosition);
+                progress = 1 - globalPosition / panelWidth;
               }
+
+              _animate(_normalizeProgressValue(progress));
             },
             child: Stack(
               children: [
@@ -259,9 +293,9 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
 
   void _normalizeOnPanDownPosition() {
     if (isOpening) {
-      _onHorizontalDragDownPositionDx += kMinimumDistanceToDetectDragging;
+      _slidingStrategy.onPanDownOnOpen();
     } else {
-      _onHorizontalDragDownPositionDx -= kMinimumDistanceToDetectDragging;
+      _slidingStrategy.onPanDownOnClose();
     }
   }
 

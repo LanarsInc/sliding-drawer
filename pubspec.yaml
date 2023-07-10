@@ -1,0 +1,17 @@
+name: flutter_sliding_drawer
+description: flutter_sliding_drawer package was created for nice and convenient way to show drawer with sliding animation.
+version: 1.0.0+1
+homepage: https://github.com/LanarsInc/sliding-drawer
+
+environment:
+  sdk: '>=2.15.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:

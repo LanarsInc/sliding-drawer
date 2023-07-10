@@ -20,7 +20,6 @@ class MainPageState extends State<MainPage> {
 
     return SlidingDrawer(
       key: slidingDrawerKey,
-      direction: SlidingDirection.left,
       settings: SlidingDrawerSettings(
         drawerWidth: slidingDrawerWidth,
       ),
@@ -29,7 +28,7 @@ class MainPageState extends State<MainPage> {
           onAction: () => slidingDrawerKey.currentState!.closeSlidingDrawer(),
         );
       },
-      mainContentBuilder: (context) {
+      contentBuilder: (context) {
         return Scaffold(
           appBar: AppBar(
             automaticallyImplyLeading: false,

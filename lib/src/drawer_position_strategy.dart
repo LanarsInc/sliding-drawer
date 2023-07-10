@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:sliding_drawer/sliding_drawer.dart';
 
-abstract class SlidingDirectionStrategy {
-  SlidingDirectionStrategy();
+abstract class DrawerPositionStrategy {
+  DrawerPositionStrategy();
 
-  factory SlidingDirectionStrategy.fromDirection(SlidingDirection slideDirection) {
-    switch (slideDirection) {
-      case SlidingDirection.right:
-        return RightSlidingDirectionStrategy();
-      case SlidingDirection.left:
-        return LeftSlidingDirectionStrategy();
+  factory DrawerPositionStrategy.fromPosition(DrawerPosition position) {
+    switch (position) {
+      case DrawerPosition.left:
+        return LeftDrawerPositionStrategy();
+      case DrawerPosition.right:
+        return RightDrawerPositionStrategy();
     }
   }
 
@@ -18,7 +18,7 @@ abstract class SlidingDirectionStrategy {
   double onHorizontalDragDownPositionDx = 0.0;
   Offset onHorizontalDragDownOffset = Offset.zero;
 
-  Tween<double> getMainContentTween({
+  Tween<double> getContentTween({
     required double drawerWidth,
     required double screenWidth,
   });
@@ -37,9 +37,9 @@ abstract class SlidingDirectionStrategy {
   void onPanDownOnClose();
 }
 
-class RightSlidingDirectionStrategy extends SlidingDirectionStrategy {
+class LeftDrawerPositionStrategy extends DrawerPositionStrategy {
   @override
-  Tween<double> getMainContentTween({
+  Tween<double> getContentTween({
     required double drawerWidth,
     required double screenWidth,
   }) {
@@ -72,18 +72,18 @@ class RightSlidingDirectionStrategy extends SlidingDirectionStrategy {
 
   @override
   void onPanDownOnOpen() {
-    onHorizontalDragDownPositionDx += SlidingDirectionStrategy.kMinimumDistanceToDetectDragging;
+    onHorizontalDragDownPositionDx += DrawerPositionStrategy.kMinimumDistanceToDetectDragging;
   }
 
   @override
   void onPanDownOnClose() {
-    onHorizontalDragDownPositionDx -= SlidingDirectionStrategy.kMinimumDistanceToDetectDragging;
+    onHorizontalDragDownPositionDx -= DrawerPositionStrategy.kMinimumDistanceToDetectDragging;
   }
 }
 
-class LeftSlidingDirectionStrategy extends SlidingDirectionStrategy {
+class RightDrawerPositionStrategy extends DrawerPositionStrategy {
   @override
-  Tween<double> getMainContentTween({
+  Tween<double> getContentTween({
     required double drawerWidth,
     required double screenWidth,
   }) {
@@ -116,11 +116,11 @@ class LeftSlidingDirectionStrategy extends SlidingDirectionStrategy {
 
   @override
   void onPanDownOnOpen() {
-    onHorizontalDragDownPositionDx -= SlidingDirectionStrategy.kMinimumDistanceToDetectDragging;
+    onHorizontalDragDownPositionDx -= DrawerPositionStrategy.kMinimumDistanceToDetectDragging;
   }
 
   @override
   void onPanDownOnClose() {
-    onHorizontalDragDownPositionDx += SlidingDirectionStrategy.kMinimumDistanceToDetectDragging;
+    onHorizontalDragDownPositionDx += DrawerPositionStrategy.kMinimumDistanceToDetectDragging;
   }
 }

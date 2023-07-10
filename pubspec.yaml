@@ -1,5 +1,5 @@
 name: sliding_drawer
-description: A starting point for Dart libraries or applications.
+description: sliding_drawer package was created for nice and convenient way to show drawer with sliding animation.
 version: 1.0.0
 
 environment:

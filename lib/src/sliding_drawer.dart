@@ -238,6 +238,7 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
                   mainContentKey: mainContentKey,
                   opacityAnimation: mainContentOpacityAnimation,
                   contentBuilder: widget.mainContentBuilder,
+                  barrierColor: widget.settings.barrierColor,
                 ),
                 _Drawer(
                   drawerBuilder: widget.drawerBuilder,
@@ -326,6 +327,7 @@ class _MainContent extends StatelessWidget {
     required this.mainContentKey,
     required this.opacityAnimation,
     required this.contentBuilder,
+    this.barrierColor,
   }) : super(key: key);
 
   final WidgetBuilder contentBuilder;
@@ -334,6 +336,7 @@ class _MainContent extends StatelessWidget {
   final AnimationController animationController;
   final Animation? animation;
   final Animation? opacityAnimation;
+  final Color? barrierColor;
 
   @override
   Widget build(BuildContext context) {
@@ -351,15 +354,18 @@ class _MainContent extends StatelessWidget {
           key: mainContentKey,
           width: double.infinity,
           height: double.infinity,
-          child: AnimatedBuilder(
-            animation: animationController,
-            builder: (_, child) {
-              return Opacity(
-                opacity: opacityAnimation!.value,
-                child: contentBuilder(context),
-              );
-            },
-          ),
+          color: barrierColor,
+          child: barrierColor == null
+              ? contentBuilder(context)
+              : AnimatedBuilder(
+                  animation: animationController,
+                  builder: (_, child) {
+                    return Opacity(
+                      opacity: opacityAnimation!.value,
+                      child: contentBuilder(context),
+                    );
+                  },
+                ),
         ),
       ),
     );

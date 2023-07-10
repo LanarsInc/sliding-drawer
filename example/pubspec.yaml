@@ -1,4 +1,4 @@
-name: sliding_drawer_example
+name: flutter_sliding_drawer_example
 description: Demonstrates how to use the sliding_drawer plugin.
 
 # The following line prevents the package from being accidentally published to
@@ -12,7 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  sliding_drawer:
+  flutter_sliding_drawer:
     # When depending on this package from a real application you should use:
     #   sliding_drawer: ^x.y.z
     # See https://dart.dev/tools/pub/dependencies#version-constraints

@@ -6,8 +6,8 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_sliding_drawer_example/main.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sliding_drawer_example/main.dart';
 
 void main() {
   testWidgets('Verify Platform version', (WidgetTester tester) async {

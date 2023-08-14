@@ -25,7 +25,7 @@ class MainPageState extends State<MainPage> {
       ),
       drawerBuilder: (context) {
         return SideMenu(
-          onAction: () => slidingDrawerKey.currentState!.closeSlidingDrawer(),
+          onAction: () => slidingDrawerKey.close(),
         );
       },
       contentBuilder: (context) {
@@ -34,7 +34,7 @@ class MainPageState extends State<MainPage> {
             automaticallyImplyLeading: false,
             leading: IconButton(
               onPressed: () {
-                slidingDrawerKey.currentState!.openSlidingDrawer();
+                slidingDrawerKey.open();
               },
               icon: const Icon(
                 Icons.menu_rounded,

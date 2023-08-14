@@ -48,7 +48,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               onPressed: () {
                 // Open drawer
-                slidingDrawerKey.currentState!.openSlidingDrawer();
+                slidingDrawerKey.open();
               },
             ),
             title: const Text('Home page'),
@@ -61,7 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
         return MyDrawerWidget(
             onItemPress: () {
               // Close drawer
-              slidingDrawerKey.currentState!.closeSlidingDrawer();
+              slidingDrawerKey.close();
             }
         );
       },

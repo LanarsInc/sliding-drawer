@@ -57,18 +57,15 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
 
   double _currentProgressPercent = 0.0;
 
-  /// Toggle drawer
-  void toggleSlidingDrawer() =>
-      _contentAnimationController.isCompleted ? closeSlidingDrawer() : openSlidingDrawer();
+  void _toggleSlidingDrawer() =>
+      _contentAnimationController.isCompleted ? _closeSlidingDrawer() : _openSlidingDrawer();
 
-  /// Open drawer
-  void openSlidingDrawer() {
+  void _openSlidingDrawer() {
     _closeKeyboard();
     _contentAnimationController.forward();
   }
 
-  /// Close drawer
-  void closeSlidingDrawer() {
+  void _closeSlidingDrawer() {
     _closeKeyboard();
     _contentAnimationController.reverse();
   }
@@ -198,7 +195,7 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
             onTap: () {
               if (contentKey.globalPaintBounds!
                   .contains(_positionStrategy.onHorizontalDragDownOffset)) {
-                closeSlidingDrawer();
+                _closeSlidingDrawer();
               }
             },
             onHorizontalDragDown: (details) {
@@ -269,18 +266,18 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
     final autocompletePercentLimit = widget.settings.autocompletePercentLimit;
     if (isOpening) {
       if (_currentProgressPercent >= autocompletePercentLimit) {
-        openSlidingDrawer();
+        _openSlidingDrawer();
       } else {
-        closeSlidingDrawer();
+        _closeSlidingDrawer();
       }
       return;
     }
 
     if (isClosing) {
       if (_currentProgressPercent <= (1 - autocompletePercentLimit)) {
-        closeSlidingDrawer();
+        _closeSlidingDrawer();
       } else {
-        openSlidingDrawer();
+        _openSlidingDrawer();
       }
       return;
     }
@@ -411,4 +408,15 @@ class _Drawer extends StatelessWidget {
       },
     );
   }
+}
+
+extension SlidingDrawerGlobalKeyExtension on GlobalKey<SlidingDrawerState> {
+  /// Open drawer
+  void open() => currentState!._openSlidingDrawer();
+
+  /// Close drawer
+  void close() => currentState!._closeSlidingDrawer();
+
+  /// Toggle drawer
+  void toggle() => currentState!._toggleSlidingDrawer();
 }

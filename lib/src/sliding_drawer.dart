@@ -81,7 +81,6 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
       vsync: this,
       duration: widget.settings.animationDuration,
     )..addStatusListener(_onAnimationStatusChanged);
-    _contentAnimationController.reset();
     _positionStrategy = DrawerPositionStrategy.fromPosition(widget.position);
   }
 
@@ -253,11 +252,10 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
 
   @override
   void dispose() {
+    _contentAnimationController
+      ..removeStatusListener(_onAnimationStatusChanged)
+      ..dispose();
     super.dispose();
-    _contentAnimationController.reset();
-    _contentAnimationController.dispose();
-    isOpen = false;
-    isClosed = true;
   }
 
   void _openOrClosePanel() {

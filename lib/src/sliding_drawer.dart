@@ -39,16 +39,17 @@ class SlidingDrawer extends StatefulWidget {
   SlidingDrawerState createState() => SlidingDrawerState();
 }
 
-class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMixin {
+class SlidingDrawerState extends State<SlidingDrawer>
+    with TickerProviderStateMixin {
   static final kMinimumDistanceToDetectDragging = 20.0;
   final contentKey = GlobalKey();
 
   late AnimationController _contentAnimationController;
   late DrawerPositionStrategy _positionStrategy;
 
-  Animation<double>? contentAnimation;
-  Animation<double>? contentOpacityAnimation;
-  Animation<double>? drawerAnimation;
+  late Animation<double> contentAnimation;
+  late Animation<double> contentOpacityAnimation;
+  late Animation<double> drawerAnimation;
 
   bool isClosed = true;
   bool isClosing = false;
@@ -57,8 +58,9 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
 
   double _currentProgressPercent = 0.0;
 
-  void _toggleSlidingDrawer() =>
-      _contentAnimationController.isCompleted ? _closeSlidingDrawer() : _openSlidingDrawer();
+  void _toggleSlidingDrawer() => _contentAnimationController.isCompleted
+      ? _closeSlidingDrawer()
+      : _openSlidingDrawer();
 
   void _openSlidingDrawer() {
     _closeKeyboard();
@@ -82,6 +84,15 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
       duration: widget.settings.animationDuration,
     )..addStatusListener(_onAnimationStatusChanged);
     _positionStrategy = DrawerPositionStrategy.fromPosition(widget.position);
+
+    contentOpacityAnimation = Tween<double>(begin: 1, end: 0.5).animate(
+      CurvedAnimation(
+        parent: _contentAnimationController,
+        curve: Curves.easeIn,
+        reverseCurve: Curves.easeOut,
+      ),
+    );
+    _updateAnimations();
   }
 
   void _onAnimationStatusChanged(AnimationStatus status) {
@@ -94,94 +105,41 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
   }
 
   @override
-  void didChangeDependencies() {
-    final drawerWidth = widget.settings.drawerWidth;
-    final screenWidth = MediaQuery.sizeOf(context).width;
-
-    contentAnimation ??= _positionStrategy
-        .getContentTween(
-          drawerWidth: drawerWidth,
-          screenWidth: screenWidth,
-        )
-        .animate(
-          CurvedAnimation(
-            parent: _contentAnimationController,
-            curve: widget.settings.animationCurve,
-            reverseCurve: widget.settings.animationReverseCurve,
-          ),
-        );
-
-    drawerAnimation ??= _positionStrategy
-        .getDrawerTween(
-          drawerWidth: drawerWidth,
-          screenWidth: screenWidth,
-        )
-        .animate(
-          CurvedAnimation(
-            parent: _contentAnimationController,
-            curve: widget.settings.animationCurve,
-            reverseCurve: widget.settings.animationReverseCurve,
-          ),
-        );
-
-    contentOpacityAnimation ??= Tween<double>(begin: 1, end: 0.5).animate(
-      CurvedAnimation(
-        parent: _contentAnimationController,
-        curve: Curves.easeIn,
-        reverseCurve: Curves.easeOut,
-      ),
-    );
-    super.didChangeDependencies();
-  }
-
-  @override
   void didUpdateWidget(covariant SlidingDrawer oldWidget) {
     super.didUpdateWidget(oldWidget);
     _contentAnimationController
       ..removeStatusListener(_onAnimationStatusChanged)
       ..addStatusListener(_onAnimationStatusChanged);
 
+    if (widget.position != oldWidget.position) {
+      _positionStrategy = DrawerPositionStrategy.fromPosition(widget.position);
+    }
+
     var settings = widget.settings;
     var oldSettings = oldWidget.settings;
     if (settings.drawerWidth != oldSettings.drawerWidth ||
         settings.animationCurve != oldSettings.animationCurve ||
-        settings.animationReverseCurve != oldSettings.animationReverseCurve) {
-      _updateAnimation();
-    }
-    if (widget.position != oldWidget.position) {
-      _positionStrategy = DrawerPositionStrategy.fromPosition(widget.position);
+        settings.animationReverseCurve != oldSettings.animationReverseCurve ||
+        widget.position != oldWidget.position) {
+      _updateAnimations();
     }
   }
 
-  void _updateAnimation() {
+  void _updateAnimations() {
     final drawerWidth = widget.settings.drawerWidth;
-    final screenWidth = MediaQuery.sizeOf(context).width;
+    final curvedAnimation = CurvedAnimation(
+      parent: _contentAnimationController,
+      curve: widget.settings.animationCurve,
+      reverseCurve: widget.settings.animationReverseCurve,
+    );
 
     contentAnimation = _positionStrategy
-        .getContentTween(
-          drawerWidth: drawerWidth,
-          screenWidth: screenWidth,
-        )
-        .animate(
-          CurvedAnimation(
-            parent: _contentAnimationController,
-            curve: Curves.easeIn,
-            reverseCurve: Curves.easeOut,
-          ),
-        );
+        .getContentTween(drawerWidth: drawerWidth)
+        .animate(curvedAnimation);
 
     drawerAnimation = _positionStrategy
-        .getDrawerTween(
-          drawerWidth: drawerWidth,
-          screenWidth: screenWidth,
-        )
-        .animate(
-          CurvedAnimation(
-            parent: _contentAnimationController,
-            curve: Curves.easeIn,
-            reverseCurve: Curves.easeOut,
-          ),
-        );
+        .getDrawerTween(drawerWidth: drawerWidth)
+        .animate(curvedAnimation);
   }
 
   @override
@@ -198,8 +156,10 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
               }
             },
             onHorizontalDragDown: (details) {
-              _positionStrategy.onHorizontalDragDownOffset = details.globalPosition;
-              _positionStrategy.onHorizontalDragDownPositionDx = details.globalPosition.dx;
+              _positionStrategy.onHorizontalDragDownOffset =
+                  details.globalPosition;
+              _positionStrategy.onHorizontalDragDownPositionDx =
+                  details.globalPosition.dx;
             },
             onHorizontalDragStart: (details) {
               _detectDirection();
@@ -213,18 +173,19 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
               double progress;
 
               if (isOpening) {
-                final globalPosition =
-                    _positionStrategy.calculateGlobalPositionOnOpen(details.globalPosition);
+                final globalPosition = _positionStrategy
+                    .calculateGlobalPositionOnOpen(details.globalPosition);
                 progress = globalPosition / panelWidth;
               } else {
-                final globalPosition =
-                    _positionStrategy.calculateGlobalPositionOnClose(details.globalPosition);
+                final globalPosition = _positionStrategy
+                    .calculateGlobalPositionOnClose(details.globalPosition);
                 progress = 1 - globalPosition / panelWidth;
               }
 
               _animate(_normalizeProgressValue(progress));
             },
             child: Stack(
+              fit: StackFit.expand,
               children: [
                 _Content(
                   shouldAbsorbPointer: isOpen,
@@ -241,6 +202,7 @@ class SlidingDrawerState extends State<SlidingDrawer> with TickerProviderStateMi
                   animationController: _contentAnimationController,
                   animation: drawerAnimation,
                   drawerWidth: widget.settings.drawerWidth,
+                  alignment: _positionStrategy.drawerAlignment,
                 ),
               ],
             ),
@@ -328,8 +290,8 @@ class _Content extends StatelessWidget {
   final bool shouldAbsorbPointer;
   final GlobalKey<State<StatefulWidget>> contentKey;
   final AnimationController animationController;
-  final Animation? animation;
-  final Animation? opacityAnimation;
+  final Animation<double> animation;
+  final Animation<double> opacityAnimation;
   final Color? barrierColor;
 
   @override
@@ -340,7 +302,7 @@ class _Content extends StatelessWidget {
         animation: animationController,
         builder: (_, child) {
           return Transform.translate(
-            offset: Offset(animation!.value, 0),
+            offset: Offset(animation.value, 0),
             child: child,
           );
         },
@@ -355,7 +317,7 @@ class _Content extends StatelessWidget {
                   animation: animationController,
                   builder: (_, child) {
                     return Opacity(
-                      opacity: opacityAnimation!.value,
+                      opacity: opacityAnimation.value,
                       child: contentBuilder(context),
                     );
                   },
@@ -374,36 +336,37 @@ class _Drawer extends StatelessWidget {
     required this.animationController,
     required this.animation,
     required this.drawerWidth,
+    required this.alignment,
   }) : super(key: key);
 
   final WidgetBuilder drawerBuilder;
   final bool shouldIgnorePointer;
   final AnimationController animationController;
-  final Animation? animation;
+  final Animation<double> animation;
   final double drawerWidth;
+  final Alignment alignment;
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return IgnorePointer(
-          ignoring: shouldIgnorePointer,
-          child: AnimatedBuilder(
-            animation: animationController,
-            builder: (_, child) {
-              return Transform.translate(
-                offset: Offset(animation!.value, 0),
-                child: child,
-              );
-            },
-            child: Container(
-              width: drawerWidth,
-              height: constraints.maxHeight,
-              child: drawerBuilder(context),
-            ),
+    return IgnorePointer(
+      ignoring: shouldIgnorePointer,
+      child: Align(
+        alignment: alignment,
+        child: AnimatedBuilder(
+          animation: animationController,
+          builder: (_, child) {
+            return Transform.translate(
+              offset: Offset(animation.value, 0),
+              child: child,
+            );
+          },
+          child: SizedBox(
+            width: drawerWidth,
+            height: double.infinity,
+            child: drawerBuilder(context),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

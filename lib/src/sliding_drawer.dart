@@ -46,6 +46,7 @@ class SlidingDrawerState extends State<SlidingDrawer>
 
   late AnimationController _contentAnimationController;
   late DrawerPositionStrategy _positionStrategy;
+  late final CurvedAnimation _curvedAnimation;
 
   late Animation<double> contentAnimation;
   late Animation<double> contentOpacityAnimation;
@@ -85,13 +86,13 @@ class SlidingDrawerState extends State<SlidingDrawer>
     )..addStatusListener(_onAnimationStatusChanged);
     _positionStrategy = DrawerPositionStrategy.fromPosition(widget.position);
 
-    contentOpacityAnimation = Tween<double>(begin: 1, end: 0.5).animate(
-      CurvedAnimation(
-        parent: _contentAnimationController,
-        curve: Curves.easeIn,
-        reverseCurve: Curves.easeOut,
-      ),
+    _curvedAnimation = CurvedAnimation(
+      parent: _contentAnimationController,
+      curve: widget.settings.animationCurve,
+      reverseCurve: widget.settings.animationReverseCurve,
     );
+    contentOpacityAnimation =
+        Tween<double>(begin: 1, end: 0.5).animate(_curvedAnimation);
     _updateAnimations();
   }
 
@@ -107,19 +108,23 @@ class SlidingDrawerState extends State<SlidingDrawer>
   @override
   void didUpdateWidget(covariant SlidingDrawer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _contentAnimationController
-      ..removeStatusListener(_onAnimationStatusChanged)
-      ..addStatusListener(_onAnimationStatusChanged);
 
+    final settings = widget.settings;
+    final oldSettings = oldWidget.settings;
+
+    if (settings.animationDuration != oldSettings.animationDuration) {
+      _contentAnimationController.duration = settings.animationDuration;
+    }
+    if (settings.animationCurve != oldSettings.animationCurve) {
+      _curvedAnimation.curve = settings.animationCurve;
+    }
+    if (settings.animationReverseCurve != oldSettings.animationReverseCurve) {
+      _curvedAnimation.reverseCurve = settings.animationReverseCurve;
+    }
     if (widget.position != oldWidget.position) {
       _positionStrategy = DrawerPositionStrategy.fromPosition(widget.position);
     }
-
-    var settings = widget.settings;
-    var oldSettings = oldWidget.settings;
     if (settings.drawerWidth != oldSettings.drawerWidth ||
-        settings.animationCurve != oldSettings.animationCurve ||
-        settings.animationReverseCurve != oldSettings.animationReverseCurve ||
         widget.position != oldWidget.position) {
       _updateAnimations();
     }
@@ -127,19 +132,14 @@ class SlidingDrawerState extends State<SlidingDrawer>
 
   void _updateAnimations() {
     final drawerWidth = widget.settings.drawerWidth;
-    final curvedAnimation = CurvedAnimation(
-      parent: _contentAnimationController,
-      curve: widget.settings.animationCurve,
-      reverseCurve: widget.settings.animationReverseCurve,
-    );
 
     contentAnimation = _positionStrategy
         .getContentTween(drawerWidth: drawerWidth)
-        .animate(curvedAnimation);
+        .animate(_curvedAnimation);
 
     drawerAnimation = _positionStrategy
         .getDrawerTween(drawerWidth: drawerWidth)
-        .animate(curvedAnimation);
+        .animate(_curvedAnimation);
   }
 
   @override
@@ -214,6 +214,7 @@ class SlidingDrawerState extends State<SlidingDrawer>
 
   @override
   void dispose() {
+    _curvedAnimation.dispose();
     _contentAnimationController
       ..removeStatusListener(_onAnimationStatusChanged)
       ..dispose();

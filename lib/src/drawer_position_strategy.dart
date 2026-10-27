@@ -18,15 +18,11 @@ abstract class DrawerPositionStrategy {
   double onHorizontalDragDownPositionDx = 0.0;
   Offset onHorizontalDragDownOffset = Offset.zero;
 
-  Tween<double> getContentTween({
-    required double drawerWidth,
-    required double screenWidth,
-  });
+  Alignment get drawerAlignment;
 
-  Tween<double> getDrawerTween({
-    required double drawerWidth,
-    required double screenWidth,
-  });
+  Tween<double> getContentTween({required double drawerWidth});
+
+  Tween<double> getDrawerTween({required double drawerWidth});
 
   double calculateGlobalPositionOnOpen(Offset globalPosition);
 
@@ -39,10 +35,10 @@ abstract class DrawerPositionStrategy {
 
 class LeftDrawerPositionStrategy extends DrawerPositionStrategy {
   @override
-  Tween<double> getContentTween({
-    required double drawerWidth,
-    required double screenWidth,
-  }) {
+  Alignment get drawerAlignment => Alignment.topLeft;
+
+  @override
+  Tween<double> getContentTween({required double drawerWidth}) {
     return Tween<double>(
       begin: 0,
       end: drawerWidth,
@@ -50,10 +46,7 @@ class LeftDrawerPositionStrategy extends DrawerPositionStrategy {
   }
 
   @override
-  Tween<double> getDrawerTween({
-    required double drawerWidth,
-    required double screenWidth,
-  }) {
+  Tween<double> getDrawerTween({required double drawerWidth}) {
     return Tween<double>(
       begin: -drawerWidth,
       end: 0,
@@ -72,21 +65,23 @@ class LeftDrawerPositionStrategy extends DrawerPositionStrategy {
 
   @override
   void onPanDownOnOpen() {
-    onHorizontalDragDownPositionDx += DrawerPositionStrategy.kMinimumDistanceToDetectDragging;
+    onHorizontalDragDownPositionDx +=
+        DrawerPositionStrategy.kMinimumDistanceToDetectDragging;
   }
 
   @override
   void onPanDownOnClose() {
-    onHorizontalDragDownPositionDx -= DrawerPositionStrategy.kMinimumDistanceToDetectDragging;
+    onHorizontalDragDownPositionDx -=
+        DrawerPositionStrategy.kMinimumDistanceToDetectDragging;
   }
 }
 
 class RightDrawerPositionStrategy extends DrawerPositionStrategy {
   @override
-  Tween<double> getContentTween({
-    required double drawerWidth,
-    required double screenWidth,
-  }) {
+  Alignment get drawerAlignment => Alignment.topRight;
+
+  @override
+  Tween<double> getContentTween({required double drawerWidth}) {
     return Tween<double>(
       begin: 0,
       end: -drawerWidth,
@@ -94,13 +89,10 @@ class RightDrawerPositionStrategy extends DrawerPositionStrategy {
   }
 
   @override
-  Tween<double> getDrawerTween({
-    required double drawerWidth,
-    required double screenWidth,
-  }) {
+  Tween<double> getDrawerTween({required double drawerWidth}) {
     return Tween<double>(
-      begin: screenWidth,
-      end: screenWidth - drawerWidth,
+      begin: drawerWidth,
+      end: 0,
     );
   }
 
@@ -116,11 +108,13 @@ class RightDrawerPositionStrategy extends DrawerPositionStrategy {
 
   @override
   void onPanDownOnOpen() {
-    onHorizontalDragDownPositionDx -= DrawerPositionStrategy.kMinimumDistanceToDetectDragging;
+    onHorizontalDragDownPositionDx -=
+        DrawerPositionStrategy.kMinimumDistanceToDetectDragging;
   }
 
   @override
   void onPanDownOnClose() {
-    onHorizontalDragDownPositionDx += DrawerPositionStrategy.kMinimumDistanceToDetectDragging;
+    onHorizontalDragDownPositionDx +=
+        DrawerPositionStrategy.kMinimumDistanceToDetectDragging;
   }
 }

@@ -8,4 +8,9 @@ build/
 Dart_Packages.xml
 Flutter_Plugins.xml
 pubspec.lock
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
 .idea/

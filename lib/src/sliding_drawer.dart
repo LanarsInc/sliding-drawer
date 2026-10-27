@@ -182,7 +182,7 @@ class SlidingDrawerState extends State<SlidingDrawer>
           progress = 1 - globalPosition / panelWidth;
         }
 
-        _animate(_normalizeProgressValue(progress));
+        _animate(progress.clamp(0.0, 1.0));
       },
       child: Stack(
         fit: StackFit.expand,
@@ -252,16 +252,6 @@ class SlidingDrawerState extends State<SlidingDrawer>
     } else {
       _positionStrategy.onPanDownOnClose();
     }
-  }
-
-  double _normalizeProgressValue(double position) {
-    if (position > 1.0) {
-      position = 1.0;
-    }
-    if (position < 0.0) {
-      position = 0.0;
-    }
-    return position;
   }
 
   void _animate(double percent) {

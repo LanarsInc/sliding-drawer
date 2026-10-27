@@ -150,8 +150,11 @@ class SlidingDrawerState extends State<SlidingDrawer>
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () {
-              if (contentKey.globalPaintBounds!
-                  .contains(_positionStrategy.onHorizontalDragDownOffset)) {
+              final contentBounds = contentKey.globalPaintBounds;
+              final containsDragOffset = contentBounds?.contains(
+                      _positionStrategy.onHorizontalDragDownOffset) ??
+                  false;
+              if (containsDragOffset) {
                 _closeSlidingDrawer();
               }
             },
@@ -245,7 +248,7 @@ class SlidingDrawerState extends State<SlidingDrawer>
   }
 
   void _detectDirection() {
-    isOpening = contentKey.globalPaintBounds!.left == 0;
+    isOpening = _contentAnimationController.isDismissed;
     isClosing = !isOpening;
   }
 

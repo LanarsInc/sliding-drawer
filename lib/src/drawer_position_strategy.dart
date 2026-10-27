@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_sliding_drawer/flutter_sliding_drawer.dart';
+
+import 'drawer_position.dart';
 
 abstract class DrawerPositionStrategy {
   DrawerPositionStrategy();

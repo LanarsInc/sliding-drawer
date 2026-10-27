@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_sliding_drawer/flutter_sliding_drawer.dart';
-import 'package:flutter_sliding_drawer/src/drawer_position_strategy.dart';
-import 'package:flutter_sliding_drawer/src/utils/global_key_extension.dart';
+
+import 'drawer_position.dart';
+import 'drawer_position_strategy.dart';
+import 'sliding_drawer_settings.dart';
+import 'utils/global_key_extension.dart';
 
 /// The widget that displays animated sliding drawer.
 class SlidingDrawer extends StatefulWidget {

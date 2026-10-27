@@ -43,7 +43,6 @@ class SlidingDrawer extends StatefulWidget {
 
 class SlidingDrawerState extends State<SlidingDrawer>
     with TickerProviderStateMixin {
-  static final kMinimumDistanceToDetectDragging = 20.0;
   final contentKey = GlobalKey();
 
   late AnimationController _contentAnimationController;
@@ -146,74 +145,67 @@ class SlidingDrawerState extends State<SlidingDrawer>
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        return Container(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              final contentBounds = contentKey.globalPaintBounds;
-              final containsDragOffset = contentBounds?.contains(
-                      _positionStrategy.onHorizontalDragDownOffset) ??
-                  false;
-              if (containsDragOffset) {
-                _closeSlidingDrawer();
-              }
-            },
-            onHorizontalDragDown: (details) {
-              _positionStrategy.onHorizontalDragDownOffset =
-                  details.globalPosition;
-              _positionStrategy.onHorizontalDragDownPositionDx =
-                  details.globalPosition.dx;
-            },
-            onHorizontalDragStart: (details) {
-              _detectDirection();
-              _normalizeOnPanDownPosition();
-            },
-            onHorizontalDragEnd: (details) {
-              _openOrClosePanel();
-            },
-            onHorizontalDragUpdate: (details) {
-              final panelWidth = widget.settings.drawerWidth;
-              double progress;
-
-              if (isOpening) {
-                final globalPosition = _positionStrategy
-                    .calculateGlobalPositionOnOpen(details.globalPosition);
-                progress = globalPosition / panelWidth;
-              } else {
-                final globalPosition = _positionStrategy
-                    .calculateGlobalPositionOnClose(details.globalPosition);
-                progress = 1 - globalPosition / panelWidth;
-              }
-
-              _animate(_normalizeProgressValue(progress));
-            },
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                _Content(
-                  shouldAbsorbPointer: isOpen,
-                  animationController: _contentAnimationController,
-                  animation: contentAnimation,
-                  contentKey: contentKey,
-                  opacityAnimation: contentOpacityAnimation,
-                  contentBuilder: widget.contentBuilder,
-                  barrierColor: widget.settings.barrierColor,
-                ),
-                _Drawer(
-                  drawerBuilder: widget.drawerBuilder,
-                  shouldIgnorePointer: isClosed,
-                  animationController: _contentAnimationController,
-                  animation: drawerAnimation,
-                  drawerWidth: widget.settings.drawerWidth,
-                  alignment: _positionStrategy.drawerAlignment,
-                ),
-              ],
-            ),
-          ),
-        );
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        final contentBounds = contentKey.globalPaintBounds;
+        final containsDragOffset = contentBounds
+                ?.contains(_positionStrategy.onHorizontalDragDownOffset) ??
+            false;
+        if (containsDragOffset) {
+          _closeSlidingDrawer();
+        }
       },
+      onHorizontalDragDown: (details) {
+        _positionStrategy.onHorizontalDragDownOffset = details.globalPosition;
+        _positionStrategy.onHorizontalDragDownPositionDx =
+            details.globalPosition.dx;
+      },
+      onHorizontalDragStart: (details) {
+        _detectDirection();
+        _normalizeOnPanDownPosition();
+      },
+      onHorizontalDragEnd: (details) {
+        _openOrClosePanel();
+      },
+      onHorizontalDragUpdate: (details) {
+        final panelWidth = widget.settings.drawerWidth;
+        double progress;
+
+        if (isOpening) {
+          final globalPosition = _positionStrategy
+              .calculateGlobalPositionOnOpen(details.globalPosition);
+          progress = globalPosition / panelWidth;
+        } else {
+          final globalPosition = _positionStrategy
+              .calculateGlobalPositionOnClose(details.globalPosition);
+          progress = 1 - globalPosition / panelWidth;
+        }
+
+        _animate(_normalizeProgressValue(progress));
+      },
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          _Content(
+            shouldAbsorbPointer: isOpen,
+            animationController: _contentAnimationController,
+            animation: contentAnimation,
+            contentKey: contentKey,
+            opacityAnimation: contentOpacityAnimation,
+            contentBuilder: widget.contentBuilder,
+            barrierColor: widget.settings.barrierColor,
+          ),
+          _Drawer(
+            drawerBuilder: widget.drawerBuilder,
+            shouldIgnorePointer: isClosed,
+            animationController: _contentAnimationController,
+            animation: drawerAnimation,
+            drawerWidth: widget.settings.drawerWidth,
+            alignment: _positionStrategy.drawerAlignment,
+          ),
+        ],
+      ),
     );
   }
 

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_sliding_drawer/flutter_sliding_drawer.dart';
-import 'package:flutter_sliding_drawer/src/drawer_position_strategy.dart';
-import 'package:flutter_sliding_drawer/src/utils/global_key_extension.dart';
+
+import 'drawer_position.dart';
+import 'drawer_position_strategy.dart';
+import 'sliding_drawer_settings.dart';
+import 'utils/global_key_extension.dart';
 
 /// The widget that displays animated sliding drawer.
 class SlidingDrawer extends StatefulWidget {
@@ -41,11 +43,11 @@ class SlidingDrawer extends StatefulWidget {
 
 class SlidingDrawerState extends State<SlidingDrawer>
     with TickerProviderStateMixin {
-  static final kMinimumDistanceToDetectDragging = 20.0;
   final contentKey = GlobalKey();
 
   late AnimationController _contentAnimationController;
   late DrawerPositionStrategy _positionStrategy;
+  late final CurvedAnimation _curvedAnimation;
 
   late Animation<double> contentAnimation;
   late Animation<double> contentOpacityAnimation;
@@ -85,13 +87,13 @@ class SlidingDrawerState extends State<SlidingDrawer>
     )..addStatusListener(_onAnimationStatusChanged);
     _positionStrategy = DrawerPositionStrategy.fromPosition(widget.position);
 
-    contentOpacityAnimation = Tween<double>(begin: 1, end: 0.5).animate(
-      CurvedAnimation(
-        parent: _contentAnimationController,
-        curve: Curves.easeIn,
-        reverseCurve: Curves.easeOut,
-      ),
+    _curvedAnimation = CurvedAnimation(
+      parent: _contentAnimationController,
+      curve: widget.settings.animationCurve,
+      reverseCurve: widget.settings.animationReverseCurve,
     );
+    contentOpacityAnimation =
+        Tween<double>(begin: 1, end: 0.5).animate(_curvedAnimation);
     _updateAnimations();
   }
 
@@ -107,19 +109,23 @@ class SlidingDrawerState extends State<SlidingDrawer>
   @override
   void didUpdateWidget(covariant SlidingDrawer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _contentAnimationController
-      ..removeStatusListener(_onAnimationStatusChanged)
-      ..addStatusListener(_onAnimationStatusChanged);
 
+    final settings = widget.settings;
+    final oldSettings = oldWidget.settings;
+
+    if (settings.animationDuration != oldSettings.animationDuration) {
+      _contentAnimationController.duration = settings.animationDuration;
+    }
+    if (settings.animationCurve != oldSettings.animationCurve) {
+      _curvedAnimation.curve = settings.animationCurve;
+    }
+    if (settings.animationReverseCurve != oldSettings.animationReverseCurve) {
+      _curvedAnimation.reverseCurve = settings.animationReverseCurve;
+    }
     if (widget.position != oldWidget.position) {
       _positionStrategy = DrawerPositionStrategy.fromPosition(widget.position);
     }
-
-    var settings = widget.settings;
-    var oldSettings = oldWidget.settings;
     if (settings.drawerWidth != oldSettings.drawerWidth ||
-        settings.animationCurve != oldSettings.animationCurve ||
-        settings.animationReverseCurve != oldSettings.animationReverseCurve ||
         widget.position != oldWidget.position) {
       _updateAnimations();
     }
@@ -127,93 +133,85 @@ class SlidingDrawerState extends State<SlidingDrawer>
 
   void _updateAnimations() {
     final drawerWidth = widget.settings.drawerWidth;
-    final curvedAnimation = CurvedAnimation(
-      parent: _contentAnimationController,
-      curve: widget.settings.animationCurve,
-      reverseCurve: widget.settings.animationReverseCurve,
-    );
 
     contentAnimation = _positionStrategy
         .getContentTween(drawerWidth: drawerWidth)
-        .animate(curvedAnimation);
+        .animate(_curvedAnimation);
 
     drawerAnimation = _positionStrategy
         .getDrawerTween(drawerWidth: drawerWidth)
-        .animate(curvedAnimation);
+        .animate(_curvedAnimation);
   }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        return Container(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              if (contentKey.globalPaintBounds!
-                  .contains(_positionStrategy.onHorizontalDragDownOffset)) {
-                _closeSlidingDrawer();
-              }
-            },
-            onHorizontalDragDown: (details) {
-              _positionStrategy.onHorizontalDragDownOffset =
-                  details.globalPosition;
-              _positionStrategy.onHorizontalDragDownPositionDx =
-                  details.globalPosition.dx;
-            },
-            onHorizontalDragStart: (details) {
-              _detectDirection();
-              _normalizeOnPanDownPosition();
-            },
-            onHorizontalDragEnd: (details) {
-              _openOrClosePanel();
-            },
-            onHorizontalDragUpdate: (details) {
-              final panelWidth = widget.settings.drawerWidth;
-              double progress;
-
-              if (isOpening) {
-                final globalPosition = _positionStrategy
-                    .calculateGlobalPositionOnOpen(details.globalPosition);
-                progress = globalPosition / panelWidth;
-              } else {
-                final globalPosition = _positionStrategy
-                    .calculateGlobalPositionOnClose(details.globalPosition);
-                progress = 1 - globalPosition / panelWidth;
-              }
-
-              _animate(_normalizeProgressValue(progress));
-            },
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                _Content(
-                  shouldAbsorbPointer: isOpen,
-                  animationController: _contentAnimationController,
-                  animation: contentAnimation,
-                  contentKey: contentKey,
-                  opacityAnimation: contentOpacityAnimation,
-                  contentBuilder: widget.contentBuilder,
-                  barrierColor: widget.settings.barrierColor,
-                ),
-                _Drawer(
-                  drawerBuilder: widget.drawerBuilder,
-                  shouldIgnorePointer: isClosed,
-                  animationController: _contentAnimationController,
-                  animation: drawerAnimation,
-                  drawerWidth: widget.settings.drawerWidth,
-                  alignment: _positionStrategy.drawerAlignment,
-                ),
-              ],
-            ),
-          ),
-        );
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        final contentBounds = contentKey.globalPaintBounds;
+        final containsDragOffset = contentBounds
+                ?.contains(_positionStrategy.onHorizontalDragDownOffset) ??
+            false;
+        if (containsDragOffset) {
+          _closeSlidingDrawer();
+        }
       },
+      onHorizontalDragDown: (details) {
+        _positionStrategy.onHorizontalDragDownOffset = details.globalPosition;
+        _positionStrategy.onHorizontalDragDownPositionDx =
+            details.globalPosition.dx;
+      },
+      onHorizontalDragStart: (details) {
+        _detectDirection();
+        _normalizeOnPanDownPosition();
+      },
+      onHorizontalDragEnd: (details) {
+        _openOrClosePanel();
+      },
+      onHorizontalDragUpdate: (details) {
+        final panelWidth = widget.settings.drawerWidth;
+        double progress;
+
+        if (isOpening) {
+          final globalPosition = _positionStrategy
+              .calculateGlobalPositionOnOpen(details.globalPosition);
+          progress = globalPosition / panelWidth;
+        } else {
+          final globalPosition = _positionStrategy
+              .calculateGlobalPositionOnClose(details.globalPosition);
+          progress = 1 - globalPosition / panelWidth;
+        }
+
+        _animate(progress.clamp(0.0, 1.0));
+      },
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          _Content(
+            shouldAbsorbPointer: isOpen,
+            animationController: _contentAnimationController,
+            animation: contentAnimation,
+            contentKey: contentKey,
+            opacityAnimation: contentOpacityAnimation,
+            contentBuilder: widget.contentBuilder,
+            barrierColor: widget.settings.barrierColor,
+          ),
+          _Drawer(
+            drawerBuilder: widget.drawerBuilder,
+            shouldIgnorePointer: isClosed,
+            animationController: _contentAnimationController,
+            animation: drawerAnimation,
+            drawerWidth: widget.settings.drawerWidth,
+            alignment: _positionStrategy.drawerAlignment,
+          ),
+        ],
+      ),
     );
   }
 
   @override
   void dispose() {
+    _curvedAnimation.dispose();
     _contentAnimationController
       ..removeStatusListener(_onAnimationStatusChanged)
       ..dispose();
@@ -244,7 +242,7 @@ class SlidingDrawerState extends State<SlidingDrawer>
   }
 
   void _detectDirection() {
-    isOpening = contentKey.globalPaintBounds!.left == 0;
+    isOpening = _contentAnimationController.isDismissed;
     isClosing = !isOpening;
   }
 
@@ -254,16 +252,6 @@ class SlidingDrawerState extends State<SlidingDrawer>
     } else {
       _positionStrategy.onPanDownOnClose();
     }
-  }
-
-  double _normalizeProgressValue(double position) {
-    if (position > 1.0) {
-      position = 1.0;
-    }
-    if (position < 0.0) {
-      position = 0.0;
-    }
-    return position;
   }
 
   void _animate(double percent) {

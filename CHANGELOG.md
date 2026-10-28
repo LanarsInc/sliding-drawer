@@ -1,3 +1,12 @@
+## 2.0.2 - 28.10.2026
+* Fix a crash when the drawer is tapped or dragged before the content has been laid out
+* Fix drag direction detection when `SlidingDrawer` is not placed at the left edge of the screen
+* Apply `animationDuration` changes from `SlidingDrawerSettings` after the widget is updated
+* Apply `animationCurve` and `animationReverseCurve` to the content opacity animation as well
+* Fix `CurvedAnimation` listeners leaking every time the drawer animations are rebuilt
+* Remove unused `SlidingDrawerState.kMinimumDistanceToDetectDragging` constant
+* Use relative imports inside the package
+
 ## 2.0.1 - 27.10.2026
 * Fix `setState() called after dispose()` error thrown when `SlidingDrawer` is removed from the tree while its animation is running ([#6](https://github.com/LanarsInc/sliding-drawer/issues/6))
 * Fix gestures not being detected on the right side of the screen when `DrawerPosition.right` is used ([#7](https://github.com/LanarsInc/sliding-drawer/issues/7))
